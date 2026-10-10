@@ -12,7 +12,7 @@ import {
   X,
 } from 'lucide-react'
 import { useAnalysis } from '@/components/analysis-context'
-import { BarChart } from '@/components/finance-shell'
+import { LineChart } from '@/components/finance-shell'
 import { formatConversationForSharing, type ChatConversation } from '@/lib/chat-history'
 
 const suggestions = [
@@ -301,8 +301,8 @@ export function DecisionChat() {
         )}
       </aside>
 
-      <div className="min-w-0 xl:col-start-2 xl:row-start-1 xl:w-full xl:max-w-[760px] xl:justify-self-center">
-        <section className="mx-auto mt-3 max-w-[760px] text-center sm:mt-8">
+      <div className="min-w-0 xl:col-start-2 xl:row-start-1 xl:w-full xl:max-w-[880px] xl:justify-self-center">
+        <section className="mx-auto mt-3 max-w-[880px] text-center sm:mt-8">
           <div className="mx-auto mb-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#e2eee4] text-[#306151]"><MessageCircle size={21} /></div>
           <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-[#a17a35]">Your financial co-pilot</p>
           <h1 className="text-4xl font-semibold tracking-[-0.055em] text-[#172a2a] sm:text-[50px] sm:leading-[1.06]">What financial decision is on your mind?</h1>
@@ -312,12 +312,12 @@ export function DecisionChat() {
               <div className="mb-3 max-h-[60vh] space-y-2 overflow-y-auto px-2 pt-1" aria-live="polite">
                 {messages.map((message, index) => (
                   <div key={`${message.role}-${index}`} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[85%] whitespace-pre-wrap break-words rounded-2xl px-4 py-3 text-[16px] leading-7 ${message.role === 'user' ? 'bg-[#17352f] text-white' : 'bg-[#f7f3ec] text-[#46544e]'}`}>
+                    <div className={`${message.role === 'user' ? 'max-w-[85%]' : 'w-full sm:w-[95%]'} whitespace-pre-wrap break-words rounded-2xl px-5 py-4 text-[16px] leading-7 ${message.role === 'user' ? 'bg-[#17352f] text-white' : 'bg-[#f7f3ec] text-[#46544e]'}`}>
                       {message.text}
                       {message.graph && (
                         <div className="mt-5 rounded-xl bg-white p-4 shadow-sm">
                           <p className="mb-4 text-sm font-semibold text-[#34443e]">Monthly Projection</p>
-                          <BarChart values={[message.graph.savings, message.graph.expenses]} labels={['Savings', 'Expenses']} />
+                          <LineChart savings={message.graph.savings} expenses={message.graph.expenses} />
                         </div>
                       )}
                     </div>

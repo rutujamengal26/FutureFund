@@ -1,6 +1,6 @@
 import type { DecisionAnalysis } from '@/services/analysisService'
 
-export type ChatMessage = { role: 'user' | 'assistant'; text: string; graph?: { savings: number; expenses: number } }
+export type ChatMessage = { role: 'user' | 'assistant'; text: string; graph?: { savings: number[]; expenses: number[] } }
 
 export type ChatConversation = {
   id: string

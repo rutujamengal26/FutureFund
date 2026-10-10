@@ -1,12 +1,12 @@
 import { fetchAPI } from '../lib/api';
 
-export interface FinancialProfile { profileId?: string; monthlyIncome?: number; monthlyExpenses?: number; savings?: number }
+export interface FinancialProfile { profileId?: string; income?: string; expenses?: string; savings?: string; emi?: string; name?: string }
 export interface DecisionRequest { question: string; profile?: FinancialProfile; conversationId?: string; transcript?: string }
 export interface StressTestResult { incomeDrop: string; emergencyExpense: string; expenseIncrease: string; cashFlowImpact: string; savingsImpact: string; risk: 'Moderate' | 'High'; assumptions: string[] }
 export interface UniverseResult { name: string; monthlyEmi: string; savings: string; netWorth: string; cashFlow: string; debtRemaining: string; tradeoff: string }
 export interface AutoPivotResult { name: string; monthlyEmi: string; totalInterest: string; savings: string; netWorth: string; risk: string }
 export interface AISecondOpinionResult { summary: string; risks: string[]; assumptions: string[]; tradeoffs: string[]; resilience: string }
-export interface DecisionAnalysis { id: string; question: string; summary: string; answer: string; createdAt: string; availableAnalyses: string[]; stressTest: StressTestResult; futures: UniverseResult[]; pivots: AutoPivotResult[]; secondOpinion: AISecondOpinionResult; graph?: { savings: number; expenses: number } }
+export interface DecisionAnalysis { id: string; question: string; summary: string; answer: string; createdAt: string; availableAnalyses: string[]; stressTest: StressTestResult; futures: UniverseResult[]; pivots: AutoPivotResult[]; secondOpinion: AISecondOpinionResult; graph?: { savings: number[]; expenses: number[] } }
 
 export function mapBackendResponseToDecisionAnalysis(request: DecisionRequest, response: any): DecisionAnalysis {
   if (response.status === 'CLARIFICATION_REQUIRED') {
@@ -57,26 +57,45 @@ export function mapBackendResponseToDecisionAnalysis(request: DecisionRequest, r
   }
 
   let answerText = 'Your financial decision has been analyzed across three universes.';
-  let graphData: { savings: number; expenses: number } | undefined;
+  let graphData: { savings: number[]; expenses: number[] } | undefined;
   
   if (request.profile && response.universes) {
     const actNow = response.universes.find((u: any) => u.summary?.universe_id === 'act_now');
     if (actNow) {
        const emi = actNow.summary.scheduled_emi_inr || 0;
        const savings = parseFloat(request.profile.savings?.toString() || '0');
-       const income = parseFloat(request.profile.monthlyIncome?.toString() || '0');
-       const expenses = parseFloat(request.profile.monthlyExpenses?.toString() || '0');
+       const income = parseFloat(request.profile.income?.toString() || '0');
+       const expenses = parseFloat(request.profile.expenses?.toString() || '0');
        
-       const inflationImpactText = "Due to a 6% rise in inflation every 12 months, your expenses will grow steadily, reducing your monthly surplus over time.";
+       const tenureMonths = response.validated_decision?.tenure_months || 36;
+       let currentSavings = savings;
+       let currentExpenses = expenses;
+       const savingsArray = [currentSavings];
+       const expensesArray = [currentExpenses];
+       
+       for(let m = 1; m <= tenureMonths; m++) {
+           currentExpenses = currentExpenses * Math.pow(1.05, 1/12);
+           currentSavings += (income - currentExpenses - emi);
+           savingsArray.push(Math.round(currentSavings));
+           expensesArray.push(Math.round(currentExpenses));
+       }
+       
+       let projectionText = "";
+       for(let m = 12; m <= tenureMonths; m += 12) {
+           projectionText += `• Savings after ${m} months: ₹${savingsArray[m].toLocaleString()}\n`;
+       }
+       if (tenureMonths % 12 !== 0 && tenureMonths > 0) {
+           projectionText += `• Savings after ${tenureMonths} months: ₹${savingsArray[tenureMonths].toLocaleString()}\n`;
+       }
        
        answerText = `Here is your financial profile and analysis:\n\n` +
        `• Salary: ₹${income.toLocaleString()}\n` +
        `• Expenses: ₹${expenses.toLocaleString()}\n` +
        `• Current Savings: ₹${savings.toLocaleString()}\n\n` +
        `Based on your decision, your calculated EMI is ₹${Math.round(emi).toLocaleString()}.\n\n` +
-       `**Inflation Impact:**\n${inflationImpactText}`;
+       `**Savings Projection:**\n${projectionText}`;
        
-       graphData = { savings: savings, expenses: expenses };
+       graphData = { savings: savingsArray, expenses: expensesArray };
     }
   }
 
@@ -98,12 +117,12 @@ export function mapBackendResponseToDecisionAnalysis(request: DecisionRequest, r
 /** Adapter that connects to the real POST /api/v1/decisions/analyze endpoint. */
 export async function analyzeDecision(request: DecisionRequest): Promise<DecisionAnalysis> {
   const profilePayload = request.profile ? {
-    monthly_income_inr: request.profile.monthlyIncome || 0,
-    monthly_rent_inr: request.profile.monthlyExpenses ? request.profile.monthlyExpenses * 0.4 : 0,
-    essential_expenses_excluding_rent_inr: request.profile.monthlyExpenses ? request.profile.monthlyExpenses * 0.4 : 0,
-    variable_expenses_inr: request.profile.monthlyExpenses ? request.profile.monthlyExpenses * 0.2 : 0,
-    current_savings_inr: request.profile.savings || 0,
-    existing_monthly_emi_inr: 0,
+    monthly_income_inr: request.profile.income ? parseFloat(request.profile.income) : 0,
+    monthly_rent_inr: request.profile.expenses ? parseFloat(request.profile.expenses) * 0.4 : 0,
+    essential_expenses_excluding_rent_inr: request.profile.expenses ? parseFloat(request.profile.expenses) * 0.4 : 0,
+    variable_expenses_inr: request.profile.expenses ? parseFloat(request.profile.expenses) * 0.2 : 0,
+    current_savings_inr: request.profile.savings ? parseFloat(request.profile.savings) : 0,
+    existing_monthly_emi_inr: request.profile.emi ? parseFloat(request.profile.emi) : 0,
     other_income_inr: 0
   } : undefined;
 

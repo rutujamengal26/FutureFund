@@ -184,3 +184,81 @@ export function PageFrame({ children }: { children: React.ReactNode }) { return 
 export function SectionCard({ title, children }: { title: string; children: React.ReactNode }) { return <section className="rounded-[26px] border border-[#e4dbcf] bg-white/75 p-6 shadow-[0_10px_32px_rgba(79,61,34,0.045)]"><h2 className="text-sm font-semibold text-[#34443e]">{title}</h2>{children}</section> }
 
 export function BarChart({ values, labels }: { values: number[]; labels: string[] }) { return <div className="flex h-44 items-end gap-3 pt-5">{values.map((value, index) => <div key={labels[index]} className="flex flex-1 flex-col items-center gap-2"><div className="w-full rounded-t-xl bg-[#d7b76c] transition-all" style={{ height: `${Math.max(value, 10)}%` }} /><span className="text-[11px] text-[#87908c]">{labels[index]}</span></div>)}</div> }
+
+export function LineChart({ savings, expenses }: { savings: number[] | number; expenses: number[] | number }) {
+  const savingsArr = Array.isArray(savings) ? savings : [savings, savings];
+  const expensesArr = Array.isArray(expenses) ? expenses : [expenses, expenses];
+  
+  const rawMax = Math.max(...savingsArr, ...expensesArr, 1);
+  const customTicks = [0, 5000, 10000, 50000, 100000, 200000, 500000, 1000000, 2000000, 5000000, 10000000];
+  const activeTicks = customTicks.filter(t => t <= rawMax);
+  const maxTick = customTicks.find(t => t >= rawMax) || customTicks[customTicks.length - 1];
+  if (!activeTicks.includes(maxTick)) activeTicks.push(maxTick);
+  
+  const numYTicks = activeTicks.length - 1;
+  const getYPercent = (val: number) => {
+    if (val <= 0) return 0;
+    if (val >= maxTick) return 100;
+    for (let i = 0; i < numYTicks; i++) {
+      if (val >= activeTicks[i] && val <= activeTicks[i+1]) {
+        const range = activeTicks[i+1] - activeTicks[i];
+        const fraction = (val - activeTicks[i]) / range;
+        return ((i + fraction) / numYTicks) * 100;
+      }
+    }
+    return 100;
+  };
+
+  const monthsCount = Math.max(savingsArr.length - 1, 1);
+  const numYears = Math.floor(monthsCount / 12);
+  
+  const pts = (arr: number[]) => arr.map((v, i) => `${(i / monthsCount) * 100},${100 - getYPercent(v)}`).join(' ');
+  const formatYLabel = (val: number) => val >= 100000 ? `${(val/100000).toFixed(1).replace('.0', '')}L` : val >= 1000 ? `${(val/1000).toFixed(0)}k` : val;
+
+  return (
+    <div className="relative mt-2 h-[350px] sm:h-[450px] w-full pb-14 pl-12 pr-2 pt-4 font-sans text-[11px] text-[#87908c]">
+      {/* Y Axis Labels */}
+      <div className="absolute bottom-14 left-0 top-4 flex w-10 flex-col-reverse justify-between text-right">
+        {activeTicks.map((tick, i) => (
+          <span key={i} className="relative top-2 pr-1 text-[#6c7771]">{formatYLabel(tick)}</span>
+        ))}
+      </div>
+      
+      {/* Chart Canvas */}
+      <div className="relative h-full w-full border-b-[1.5px] border-l-[1.5px] border-[#34443e]">
+        {/* Horizontal Grid Lines */}
+        {activeTicks.slice(1).map((_, i) => (
+          <div key={i} className="absolute w-full border-t border-[#e6dfd5]" style={{ bottom: `${((i + 1) / numYTicks) * 100}%` }} />
+        ))}
+        
+        {/* Lines */}
+        <svg className="absolute inset-0 h-full w-full overflow-visible" preserveAspectRatio="none" viewBox="0 0 100 100">
+          <polyline fill="none" stroke="#d7b76c" strokeWidth="2" points={pts(savingsArr)} vectorEffect="non-scaling-stroke" />
+          <polyline fill="none" stroke="#a34b3b" strokeWidth="2" points={pts(expensesArr)} vectorEffect="non-scaling-stroke" />
+          
+          <circle cx="0" cy={100 - getYPercent(savingsArr[0])} r="3" fill="#d7b76c" />
+          <circle cx="0" cy={100 - getYPercent(expensesArr[0])} r="3" fill="#a34b3b" />
+          
+          <circle cx="100" cy={100 - getYPercent(savingsArr[savingsArr.length - 1])} r="3" fill="#d7b76c" />
+          <circle cx="100" cy={100 - getYPercent(expensesArr[expensesArr.length - 1])} r="3" fill="#a34b3b" />
+        </svg>
+      </div>
+
+      {/* X Axis Labels */}
+      <div className="absolute bottom-8 left-12 right-2 h-5">
+        {Array.from({ length: numYears + 1 }).map((_, i) => (
+          <div key={i} className="absolute top-0 flex -translate-x-1/2 flex-col items-center" style={{ left: `${(i / Math.max(1, numYears)) * 100}%` }}>
+            <div className="h-1.5 w-[1.5px] bg-[#34443e]" />
+            <span className="mt-1 font-medium text-[#6c7771]">{i === 0 ? '0' : `${i} year`}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Legend */}
+      <div className="absolute bottom-0 left-0 flex w-full justify-center gap-6 text-[12px] font-medium text-[#6c7771]">
+        <span className="flex items-center gap-1.5"><div className="h-2.5 w-2.5 rounded-full bg-[#d7b76c]"></div> Saving</span>
+        <span className="flex items-center gap-1.5"><div className="h-2.5 w-2.5 rounded-full bg-[#a34b3b]"></div> Expenses</span>
+      </div>
+    </div>
+  )
+}

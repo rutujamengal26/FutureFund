@@ -3,7 +3,7 @@
 import { createContext, useContext, useMemo, useState } from 'react'
 import { analyzeDecision, type DecisionAnalysis } from '@/services/analysisService'
 
-type Message = { role: 'user' | 'assistant'; text: string; graph?: { savings: number; expenses: number } }
+type Message = { role: 'user' | 'assistant'; text: string; graph?: { savings: number[]; expenses: number[] } }
 type AnalysisContextValue = { analysis: DecisionAnalysis | null; messages: Message[]; loading: boolean; error: string; submit: (question: string) => Promise<void> }
 const AnalysisContext = createContext<AnalysisContextValue | null>(null)
 

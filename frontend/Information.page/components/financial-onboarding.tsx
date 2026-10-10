@@ -111,7 +111,7 @@ export function FinancialOnboarding() {
     <main className="onboarding-shell finance-canvas">
       <FinancePattern />
       <header className="topbar">
-        <div className="brand"><span className="brand-mark"><img src="/images/futurefunds-logo.jpeg" alt="" /></span><span>Future<span className="brand-accent">Funds</span></span></div>
+        <div className="brand"><span className="brand-mark"><svg viewBox="0 0 64 64" role="img" aria-label="Future Fund mark" className="h-5 w-5 text-[#b4c99c]"><circle cx="32" cy="32" r="30" fill="none" stroke="currentColor" strokeWidth="1.5" /><path d="M40 19H27a8 8 0 0 0-8 8v19m0-14h17" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" /><circle cx="45" cy="44" r="3" fill="currentColor" /></svg></span><span>Future<span className="brand-accent">Funds</span></span></div>
         <div className="privacy-note"><LockKeyhole size={14} /> Your information stays private</div>
       </header>
 

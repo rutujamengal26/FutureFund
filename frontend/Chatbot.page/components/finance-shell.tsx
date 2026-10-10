@@ -22,7 +22,7 @@ export function FinanceShell({ children }: { children: React.ReactNode }) {
       <header className="sticky top-0 z-20 border-b border-[#e7dfd2]/80 bg-[#fbf6ee]/90 backdrop-blur-xl">
         <div className="mx-auto flex max-w-[1240px] items-center gap-6 px-4 py-3.5 lg:gap-8 lg:px-8">
           <Link href="/decision" className="flex shrink-0 items-center gap-3" aria-label="FutureFunds home">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#17352f] text-[#f3c76b] shadow-sm"><Sparkles size={17} strokeWidth={2.5} /></span>
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#17352f] text-[#b4c99c] shadow-sm"><svg viewBox="0 0 64 64" role="img" aria-label="Future Fund mark" className="h-5 w-5"><circle cx="32" cy="32" r="30" fill="none" stroke="currentColor" strokeWidth="1.5" /><path d="M40 19H27a8 8 0 0 0-8 8v19m0-14h17" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" /><circle cx="45" cy="44" r="3" fill="currentColor" /></svg></span>
             <span className="hidden text-[17px] font-semibold tracking-[-0.02em] sm:inline">FutureFunds</span>
           </Link>
           <nav aria-label="Analysis sections" className="min-w-0 flex-1 overflow-x-auto py-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">

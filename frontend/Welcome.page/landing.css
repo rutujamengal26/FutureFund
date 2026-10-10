@@ -43,16 +43,19 @@
 
 .landing-page .brand-mark {
   display: inline-grid;
-  width: 54px;
-  height: 54px;
+  width: clamp(100px, 14vw, 140px);
+  height: clamp(100px, 14vw, 140px);
   place-items: center;
-  color: var(--landing-green);
+  border-radius: 28% 28% 28% 9%;
+  background: #172d48;
+  color: #b4c99c;
+  box-shadow: 0 16px 36px rgba(23, 45, 72, 0.28);
 }
 
 .landing-page .brand-mark svg {
   display: block;
-  width: 100%;
-  height: 100%;
+  width: 62%;
+  height: 62%;
 }
 
 .landing-page .hero h1,
@@ -467,12 +470,14 @@
 }
 
 .landing-page .brand-mark {
-  width: clamp(120px, 17vw, 176px);
-  height: clamp(120px, 17vw, 176px);
+  width: clamp(100px, 14vw, 140px);
+  height: clamp(100px, 14vw, 140px);
   margin-bottom: 27px;
-  border-color: rgb(187 139 66 / 72%);
-  background: rgb(251 248 241 / 65%);
-  color: var(--landing-ink);
+  border: none;
+  border-radius: 28% 28% 28% 9%;
+  background: #172d48;
+  color: #b4c99c;
+  box-shadow: 0 16px 36px rgba(23, 45, 72, 0.28);
 }
 
 .landing-page .hero h1 {
@@ -853,8 +858,8 @@
   }
 
   .landing-page .brand-mark {
-    width: clamp(120px, 32vw, 150px);
-    height: clamp(120px, 32vw, 150px);
+    width: clamp(90px, 24vw, 120px);
+    height: clamp(90px, 24vw, 120px);
   }
 
   .landing-page .hero__quote {

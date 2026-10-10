@@ -275,7 +275,7 @@
   display: flex;
   min-height: 680px;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: center;
   padding: clamp(90px, 12vw, 160px) max(24px, calc((100vw - 1060px) / 2)) 30px;
   background:
     radial-gradient(ellipse at 88% 4%, rgb(163 188 138 / 17%), transparent 34%),
@@ -285,7 +285,7 @@
 
 .landing-page .future-plan__content {
   width: min(100%, 950px);
-  margin: 0 auto auto;
+  margin: 0 auto;
 }
 
 .landing-page .future-plan .eyebrow {
@@ -674,6 +674,7 @@
   min-height: max(720px, 100svh);
   padding: 48px clamp(24px, 8vw, 128px) 120px;
   place-items: center;
+  justify-content: center;
   background:
     radial-gradient(ellipse at 82% 53%, rgb(210 189 162 / 23%), transparent 36%),
     linear-gradient(120deg, #102b40, #193d54 70%, #274356);
@@ -683,6 +684,7 @@
 .landing-page .future-plan__content {
   width: min(760px, 100%);
   margin: 0 auto;
+  justify-self: center;
   text-align: center;
 }
 

@@ -13,7 +13,6 @@ export function LandingExperience() {
     if (!page) return
 
     const revealItems = page.querySelectorAll<HTMLElement>('[data-reveal]')
-    const scrollSections = page.querySelectorAll<HTMLElement>('[data-scroll-section]')
     const hero = page.querySelector<HTMLElement>('.hero')
     const heroSphere = page.querySelector<HTMLElement>('.hero__sphere')
     const backgroundVideo = page.querySelector<HTMLVideoElement>('.perspective__video')
@@ -69,25 +68,22 @@ export function LandingExperience() {
     }
 
     let scrollObserver: IntersectionObserver | undefined
-    if ('IntersectionObserver' in window && (revealItems.length > 0 || scrollSections.length > 0)) {
-      page.classList.add('has-reveal', 'has-section-reveal')
+    if ('IntersectionObserver' in window && revealItems.length > 0) {
+      page.classList.add('has-reveal')
       scrollObserver = new IntersectionObserver(
         (entries) => {
           entries.forEach((entry) => {
-            if (entry.target.hasAttribute('data-scroll-section')) {
-              entry.target.classList.toggle('is-active', entry.isIntersecting)
-            } else {
-              entry.target.classList.toggle('is-visible', entry.isIntersecting)
+            if (entry.isIntersecting) {
+              entry.target.classList.add('is-visible')
+              scrollObserver?.unobserve(entry.target)
             }
           })
         },
         { threshold: 0.2, rootMargin: '-8% 0px -8% 0px' },
       )
       revealItems.forEach((item) => scrollObserver?.observe(item))
-      scrollSections.forEach((section) => scrollObserver?.observe(section))
     } else {
       revealItems.forEach((item) => item.classList.add('is-visible'))
-      scrollSections.forEach((section) => section.classList.add('is-active'))
     }
 
     const futurePlanButton = page.querySelector<HTMLAnchorElement>('.future-plan__button')
@@ -126,7 +122,7 @@ export function LandingExperience() {
         coinRain?.remove()
         coinRain = undefined
         futurePlanButton.removeAttribute('aria-disabled')
-        router.push('/')
+        router.push('/onboarding')
       }, coinAnimationDuration)
     }
 
@@ -214,7 +210,7 @@ export function LandingExperience() {
           <p className="future-plan__copy" data-reveal style={delayed(100)}>
             Big goals begin with small, steady choices. Take the time to understand what matters to you, then move forward at your own pace.
           </p>
-          <a className="future-plan__button" href="/" data-reveal style={delayed(200)}>
+          <a className="future-plan__button" href="/onboarding" data-reveal style={delayed(200)}>
             <span>Let’s see the future</span>
             <span className="button-arrow" aria-hidden="true">↗</span>
           </a>

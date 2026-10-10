@@ -3,8 +3,8 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'FutureFunds — See the Impact Before You Decide',
-  description: 'Build a clearer picture of your financial future with FutureFunds.',
+  title: 'Future Fund — Make tomorrow matter',
+  description: 'Future Fund helps you make thoughtful financial decisions for the life ahead.',
   generator: 'v0.app',
   icons: {
     icon: [

@@ -1,5 +1,6 @@
-import { FinancialOnboarding } from '@/components/financial-onboarding'
+import { LandingExperience } from './landing/landing-experience'
+import './landing/landing.css'
 
 export default function Home() {
-  return <FinancialOnboarding />
+  return <LandingExperience />
 }

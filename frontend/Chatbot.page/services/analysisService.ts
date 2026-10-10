@@ -48,7 +48,9 @@ export function mapBackendResponseToDecisionAnalysis(request: DecisionRequest, r
      secondOpinion.summary = "Second opinion not available.";
   }
 
-  let stressTest: StressTestResult = { incomeDrop: '-20%', emergencyExpense: '₹30,000', expenseIncrease: '+20%', cashFlowImpact: 'N/A', savingsImpact: 'N/A', risk: 'Moderate', assumptions: ['20% income reduction for 6 months', '₹50,000 emergency medical expense in month 3', '10% permanent increase in essential living expenses'] };
+  const parsedIncome = request.profile?.income ? parseFloat(request.profile.income.toString()) : 0;
+  const dynamicEmergency = parsedIncome > 0 ? `₹${(parsedIncome / 2).toLocaleString()}` : '₹30,000';
+  let stressTest: StressTestResult = { incomeDrop: '-20%', emergencyExpense: dynamicEmergency, expenseIncrease: '+20%', cashFlowImpact: 'N/A', savingsImpact: 'N/A', risk: 'Moderate', assumptions: ['20% income reduction for 6 months', '₹50,000 emergency medical expense in month 3', '10% permanent increase in essential living expenses'] };
   const st = response.stress_tests?.act_now?.summary || response.stress_tests?.baseline?.summary;
   if (st) {
     stressTest.cashFlowImpact = `₹${st.stressed_monthly_surplus_at_horizon_inr || 0}`;

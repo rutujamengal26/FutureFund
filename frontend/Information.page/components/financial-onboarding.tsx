@@ -1,6 +1,10 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { useAnalysis } from '@/components/analysis-context'
+import { emptyUserProfile, type UserProfile } from '@/lib/user-profile'
+import { FinancePattern } from '@/components/finance-pattern'
 import {
   ArrowLeft,
   ArrowRight,
@@ -16,26 +20,8 @@ import {
   WalletCards,
 } from 'lucide-react'
 
-type Profile = {
-  name: string
-  age: string
-  income: string
-  expenses: string
-  assets: string
-  savings: string
-  emergency: string
-  loans: string
-  emi: string
-  liabilities: string
-  noLiabilities: boolean
-  salaryGrowth: string
-  duration: string
-}
-
-const initialProfile: Profile = {
-  name: '', age: '', income: '', expenses: '', assets: '', savings: '', emergency: '',
-  loans: '', emi: '', liabilities: '', noLiabilities: false, salaryGrowth: '0', duration: '36',
-}
+type Profile = UserProfile
+const initialProfile: Profile = { ...emptyUserProfile }
 
 const steps = ['About you', 'Assets & savings', 'Loans & liabilities', 'Future assumptions']
 
@@ -61,12 +47,19 @@ function Field({ label, name, value, onChange, placeholder, icon: Icon, hint, er
 }
 
 export function FinancialOnboarding() {
+  const router = useRouter()
+  const { userProfile, profileLoaded, updateUserProfile } = useAnalysis()
   const [step, setStep] = useState(0)
   const [profile, setProfile] = useState<Profile>(initialProfile)
   const [errors, setErrors] = useState<Record<string, string>>({})
 
+  useEffect(() => {
+    if (profileLoaded) setProfile(userProfile)
+  }, [profileLoaded, userProfile])
+
   const update = (name: keyof Profile, value: string | boolean) => {
     setProfile((current) => ({ ...current, [name]: value }))
+    if (profileLoaded) updateUserProfile({ [name]: value })
     setErrors((current) => ({ ...current, [name]: '' }))
   }
 
@@ -106,13 +99,17 @@ export function FinancialOnboarding() {
   const nextStep = () => {
     if (!validate(step)) return
     if (step < 3) setStep((current) => current + 1)
-    else window.location.href = '/decision'
+    else {
+      updateUserProfile(profile)
+      router.push('/chatbot')
+    }
   }
 
   const progress = useMemo(() => `${((step + 1) / steps.length) * 100}%`, [step])
 
   return (
-    <main className="onboarding-shell">
+    <main className="onboarding-shell finance-canvas">
+      <FinancePattern />
       <header className="topbar">
         <div className="brand"><span className="brand-mark"><img src="/images/futurefunds-logo.jpeg" alt="" /></span><span>Future<span className="brand-accent">Funds</span></span></div>
         <div className="privacy-note"><LockKeyhole size={14} /> Your information stays private</div>

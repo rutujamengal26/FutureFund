@@ -162,7 +162,7 @@
 
 body { background: #f6f3ec; color: #1f2825; font-family: Arial, Helvetica, sans-serif; }
 button, input, select { font: inherit; }
-.onboarding-shell { min-height: 100vh; background: #f6f3ec; padding: 25px 6.3vw 34px; }
+.onboarding-shell { min-height: 100vh; background: #fbf6ee; padding: 25px 6.3vw 34px; }
 .topbar { display:flex; justify-content:space-between; align-items:center; max-width:1120px; margin:0 auto; }
 .brand { display:flex; align-items:center; gap:10px; color:#23302b; font-size:18px; font-weight:700; letter-spacing:-.04em; }
 .brand-mark { display:grid; place-items:center; overflow:hidden; width:34px; height:34px; border-radius:10px 10px 10px 3px; background:#172d48; color:#223129; }.brand-mark img { width:100%; height:100%; object-fit:cover; object-position:center; transform:scale(2.05); }
@@ -192,3 +192,23 @@ button, input, select { font: inherit; }
 .check-card { display:flex; align-items:flex-start; gap:11px; padding:13px 15px; background:#f1f4ec; border:1px solid #dce5d5; border-radius:10px; margin-bottom:22px; cursor:pointer; }.check-card input { position:absolute; opacity:0; }.custom-check { display:grid; place-items:center; flex:none; width:19px; height:19px; border:1px solid #aab8a0; border-radius:5px; color:transparent; }.check-card input:checked + .custom-check { background:#82996f; border-color:#82996f; color:#fff; }.check-card strong { display:block; color:#4f6354; font-size:11px; }.check-card small { display:block; color:#94a094; margin-top:4px; font-size:10px; }
 .form-actions { display:flex; align-items:center; justify-content:space-between; margin-top:32px; }.back-button { display:flex; align-items:center; gap:6px; background:none; color:#7c8980; border:0; padding:8px 0; font-size:12px; cursor:pointer; }.continue-button { display:flex; align-items:center; gap:14px; border:0; color:#f8f6f0; background:#293a32; border-radius:9px; padding:13px 17px 13px 20px; font-size:12px; font-weight:700; cursor:pointer; box-shadow:0 5px 12px rgba(39,58,49,.14); transition:background .2s, transform .2s; }.continue-button:hover { background:#3c5748; transform:translateY(-1px); }.footer-note { display:flex; justify-content:center; align-items:center; gap:6px; color:#a0a89f; font-size:10px; margin-top:22px; }.footer-note svg { color:#90a37e; }
 @media (max-width:700px) { .onboarding-shell { padding:20px 18px 28px; }.privacy-note { display:none; }.intro { margin:58px auto 34px; }.intro h1 { font-size:37px; }.form-card { padding:28px 20px 22px; border-radius:16px; }.fields-grid, .fields-grid.three, .future-grid { grid-template-columns:1fr; gap:17px; }.step-label { font-size:0; justify-content:flex-start!important; }.step-label.active { font-size:10px; }.step-label .step-dot { flex:none; }.card-heading h2 { font-size:24px; }.progress-area { margin-bottom:18px; } }
+
+.finance-canvas { position: relative; isolation: isolate; background: #fbf6ee; }
+.finance-canvas::before { content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: radial-gradient(circle at 12% 12%, rgba(222, 198, 143, .17), transparent 28%), radial-gradient(circle at 88% 76%, rgba(188, 211, 190, .16), transparent 25%); }
+.finance-pattern { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; color: #b5a37d; opacity: .16; }
+.finance-pattern svg { position: absolute; min-width: 900px; width: 100%; height: 100%; }
+
+.chatbot-interface { color: #263d39; }
+.chatbot-interface button { font-size: 15px; }
+.chatbot-interface input, .chatbot-interface textarea { font-size: 17px; }
+.chatbot-interface [class*="text-xs"] { font-size: 14px; line-height: 1.4; }
+.chatbot-interface [class*="text-sm"] { font-size: 15px; line-height: 1.55; }
+.chatbot-interface [class*="text-[11px]"] { font-size: 13px; line-height: 1.4; }
+.chatbot-interface [class*="text-[12px]"] { font-size: 14px; line-height: 1.45; }
+.chatbot-interface [class*="text-[13px]"] { font-size: 14px; line-height: 1.5; }
+.chatbot-interface [class*="text-[15px]"] { font-size: 16px; line-height: 1.6; }
+.chatbot-interface [class*="text-[16px]"] { font-size: 16px; line-height: 1.65; }
+
+@media (max-width: 720px) {
+  .chatbot-interface { padding-inline: 1rem; }
+}

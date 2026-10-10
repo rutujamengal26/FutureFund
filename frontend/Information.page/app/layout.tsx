@@ -1,6 +1,7 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
+import { AnalysisProvider } from '@/components/analysis-context'
 
 export const metadata: Metadata = {
   title: 'Future Fund — Make tomorrow matter',
@@ -41,7 +42,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased">
-        {children}
+        <AnalysisProvider>{children}</AnalysisProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>

@@ -1,0 +1,158 @@
+'use client'
+
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { Brain, ChevronDown, GitBranch, MessageCircle, RefreshCw, ShieldCheck, Sparkles, UserRound } from 'lucide-react'
+import { FinancePattern } from '@/components/finance-pattern'
+import { ProfileDialog } from '@/components/profile-dialog'
+import { useCallback, useEffect, useRef, useState } from 'react'
+
+const sections = [
+  { href: '/chatbot', label: 'Chatbot', icon: MessageCircle },
+  { href: '/stress-test', label: 'Stress Test & Risk', icon: ShieldCheck },
+  { href: '/multiple-futures', label: 'Multiple Futures', icon: GitBranch },
+  { href: '/auto-pivot', label: 'Auto-Pivot', icon: RefreshCw },
+  { href: '/ai-opinion', label: 'AI Second Opinion', icon: Brain },
+]
+
+export function FinanceShell({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname()
+  const [profileOpen, setProfileOpen] = useState(false)
+  const [profileMode, setProfileMode] = useState<'view' | 'edit' | null>(null)
+  const profileTriggerRef = useRef<HTMLButtonElement>(null)
+  const profileMenuRef = useRef<HTMLDivElement>(null)
+  const wasDialogOpen = useRef(false)
+
+  const closeProfileDialog = useCallback(() => setProfileMode(null), [])
+  const editProfile = useCallback(() => setProfileMode('edit'), [])
+
+  useEffect(() => {
+    if (profileOpen) {
+      profileMenuRef.current?.querySelector<HTMLButtonElement>('button')?.focus()
+    }
+  }, [profileOpen])
+
+  useEffect(() => {
+    if (wasDialogOpen.current && profileMode === null) profileTriggerRef.current?.focus()
+    wasDialogOpen.current = profileMode !== null
+  }, [profileMode])
+
+  useEffect(() => {
+    if (!profileOpen) return
+    function handlePointerDown(event: PointerEvent) {
+      if (
+        event.target instanceof Node &&
+        !profileMenuRef.current?.contains(event.target) &&
+        !profileTriggerRef.current?.contains(event.target)
+      ) setProfileOpen(false)
+    }
+    function handleEscape(event: globalThis.KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setProfileOpen(false)
+        profileTriggerRef.current?.focus()
+      }
+    }
+    document.addEventListener('pointerdown', handlePointerDown)
+    document.addEventListener('keydown', handleEscape)
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown)
+      document.removeEventListener('keydown', handleEscape)
+    }
+  }, [profileOpen])
+
+  return (
+    <main className="finance-canvas min-h-screen overflow-x-hidden text-[#17212b]"><FinancePattern />
+      <header className="sticky top-0 z-20 border-b border-[#e7dfd2]/80 bg-[#fbf6ee]/90 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-[1240px] items-center gap-6 px-4 py-3.5 lg:gap-8 lg:px-8">
+          <Link href="/chatbot" className="flex shrink-0 items-center gap-3" aria-label="FutureFunds home">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#17352f] text-[#f3c76b] shadow-sm"><Sparkles size={17} strokeWidth={2.5} /></span>
+            <span className="hidden text-[17px] font-semibold tracking-[-0.02em] sm:inline">FutureFunds</span>
+          </Link>
+          <nav aria-label="Analysis sections" className="min-w-0 flex-1 overflow-x-auto py-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div className="flex min-w-max items-center gap-2">
+              {sections.map(({ href, label, icon: Icon }) => {
+                const active = pathname === href
+                return <Link key={href} href={href} aria-current={active ? 'page' : undefined} className={`flex items-center gap-2 rounded-xl border px-3.5 py-2.5 text-[14px] font-semibold transition-all duration-200 ${active ? 'border-[#c8a256] bg-[#f7eaca] text-[#304d42] shadow-[0_3px_12px_rgba(163,123,44,0.12)]' : 'border-[#e5ddd1] bg-[#fffdf9]/75 text-[#66736d] hover:border-[#d3bd8b] hover:bg-white hover:text-[#34554b]'}`}><Icon size={16} strokeWidth={2} /><span>{label}</span></Link>
+              })}
+            </div>
+          </nav>
+          <div className="relative shrink-0">
+            <button
+              ref={profileTriggerRef}
+              aria-label="Open profile menu"
+              aria-haspopup="menu"
+              aria-expanded={profileOpen}
+              aria-controls="profile-menu"
+              onClick={() => setProfileOpen((open) => !open)}
+              onKeyDown={(event) => {
+                if (event.key === 'Escape') setProfileOpen(false)
+                if (event.key === 'ArrowDown') {
+                  event.preventDefault()
+                  setProfileOpen(true)
+                }
+              }}
+              className="flex items-center gap-2 rounded-full border border-[#ded8ce] bg-white/70 py-1.5 pl-1.5 pr-2.5 text-sm transition hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#a17a35]"
+            >
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#dfebdf] text-[#275447]"><UserRound size={15} /></span><ChevronDown size={14} className="text-[#63706b]" />
+            </button>
+            {profileOpen && (
+              <div
+                ref={profileMenuRef}
+                id="profile-menu"
+                role="menu"
+                aria-label="Profile actions"
+                className="absolute right-0 top-12 z-30 w-56 rounded-2xl border border-[#e3ddd3] bg-white p-2 shadow-xl"
+              >
+                <p className="px-3 pb-2 pt-1 text-xs text-[#87908c]">Your account</p>
+                <button
+                  role="menuitem"
+                  onClick={() => { setProfileMode('view'); setProfileOpen(false) }}
+                  className="block w-full rounded-xl px-3 py-2.5 text-left text-sm hover:bg-[#f8f3eb] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#a17a35]"
+                >
+                  View Profile
+                </button>
+                <button
+                  role="menuitem"
+                  onClick={() => { setProfileMode('edit'); setProfileOpen(false) }}
+                  className="block w-full rounded-xl px-3 py-2.5 text-left text-sm hover:bg-[#f8f3eb] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#a17a35]"
+                >
+                  Edit Profile
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </header>
+      {children}
+      {profileMode && (
+        <ProfileDialog
+          key={profileMode}
+          mode={profileMode}
+          onClose={closeProfileDialog}
+          onEdit={editProfile}
+        />
+      )}
+    </main>
+  )
+}
+
+export { sections }
+
+export function EmptyAnalysis({ title, detail }: { title: string; detail: string }) {
+  return <div className="mx-auto mt-14 max-w-[560px] rounded-[28px] border border-[#e2d9ca] bg-white/80 p-8 text-center shadow-[0_14px_40px_rgba(79,61,34,0.06)]"><div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f5ead0] text-[#a57627]"><Sparkles size={20} /></div><h2 className="mt-5 text-xl font-semibold text-[#263d39]">{title}</h2><p className="mt-3 text-sm leading-6 text-[#78827d]">{detail}</p><Link href="/chatbot" className="mt-6 inline-flex rounded-xl bg-[#17352f] px-4 py-3 text-sm font-semibold text-[#f5d282] transition hover:bg-[#285248]">Ask Your First Question</Link></div>
+}
+
+export function MetricCard({ label, value, detail, tone = 'gold' }: { label: string; value: string; detail: string; tone?: 'gold' | 'sage' | 'rose' }) {
+  const tones = { gold: 'bg-[#fbf3df] text-[#9b722e]', sage: 'bg-[#e4efe5] text-[#346452]', rose: 'bg-[#f8e7df] text-[#a34b3b]' }
+  return <div className="rounded-2xl border border-[#e6ded3] bg-white/80 p-5"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#89928c]">{label}</p><p className="mt-3 text-2xl font-semibold tracking-tight text-[#263d39]">{value}</p><p className={`mt-2 inline-flex rounded-full px-2 py-1 text-[11px] font-semibold ${tones[tone]}`}>{detail}</p></div>
+}
+
+export function AnalysisHeader({ eyebrow, title, description }: { eyebrow: string; title: string; description: string }) {
+  return <div className="mx-auto max-w-[1240px] px-5 pb-10 pt-14 lg:px-8"><p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#a17a35]">{eyebrow}</p><h1 className="mt-3 max-w-[760px] text-4xl font-semibold tracking-[-0.055em] text-[#172a2a] sm:text-[52px] sm:leading-[1.04]">{title}</h1><p className="mt-5 max-w-[600px] text-[15px] leading-7 text-[#6c7771]">{description}</p></div>
+}
+
+export function PageFrame({ children }: { children: React.ReactNode }) { return <div className="mx-auto max-w-[1240px] px-5 pb-20 lg:px-8">{children}</div> }
+
+export function SectionCard({ title, children }: { title: string; children: React.ReactNode }) { return <section className="rounded-[26px] border border-[#e4dbcf] bg-white/75 p-6 shadow-[0_10px_32px_rgba(79,61,34,0.045)]"><h2 className="text-sm font-semibold text-[#34443e]">{title}</h2>{children}</section> }
+
+export function BarChart({ values, labels }: { values: number[]; labels: string[] }) { return <div className="flex h-44 items-end gap-3 pt-5">{values.map((value, index) => <div key={labels[index]} className="flex flex-1 flex-col items-center gap-2"><div className="w-full rounded-t-xl bg-[#d7b76c] transition-all" style={{ height: `${Math.max(value, 10)}%` }} /><span className="text-[11px] text-[#87908c]">{labels[index]}</span></div>)}</div> }

@@ -1,5 +1,5 @@
-import { LandingExperience } from './landing/landing-experience'
-import './landing/landing.css'
+import { LandingExperience } from '../../Welcome.page/landing-experience'
+import '../../Welcome.page/landing.css'
 
 export default function Home() {
   return <LandingExperience />

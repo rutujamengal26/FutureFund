@@ -1,0 +1,4 @@
+{
+  "extends": "../Information.page/tsconfig.json",
+  "include": ["./landing-experience.tsx"]
+}

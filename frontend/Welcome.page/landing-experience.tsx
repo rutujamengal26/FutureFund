@@ -97,6 +97,15 @@ export function LandingExperience() {
 
       const coinColumns = Math.min(80, Math.max(32, Math.ceil(window.innerWidth / 18)))
       const coinCount = coinColumns * 10
+      let randomState = (performance.now() * 1000) >>> 0
+      if (randomState === 0) randomState = 0x6d2b79f5
+      const decorativeRandom = () => {
+        randomState ^= randomState << 13
+        randomState ^= randomState >>> 17
+        randomState ^= randomState << 5
+        return (randomState >>> 0) / 0x100000000
+      }
+
       coinRain = document.createElement('div')
       coinRain.className = 'coin-rain'
       coinRain.setAttribute('aria-hidden', 'true')
@@ -104,16 +113,16 @@ export function LandingExperience() {
 
       for (let index = 0; index < coinCount; index += 1) {
         const coin = document.createElement('span')
-        const size = 28 + Math.random() * 22
+        const size = 28 + decorativeRandom() * 22
         const column = index % coinColumns
-        const screenPosition = ((column + Math.random() * 0.9) / coinColumns) * 100
+        const screenPosition = ((column + decorativeRandom() * 0.9) / coinColumns) * 100
         coin.className = 'coin-rain__coin'
         coin.textContent = '₹'
         coin.style.setProperty('--coin-left', `${screenPosition}%`)
         coin.style.setProperty('--coin-size', `${size}px`)
-        coin.style.setProperty('--coin-delay', `${Math.random() * 100}ms`)
-        coin.style.setProperty('--coin-duration', `${2100 + Math.random() * 500}ms`)
-        coin.style.setProperty('--coin-drift', `${Math.random() * 140 - 70}px`)
+        coin.style.setProperty('--coin-delay', `${decorativeRandom() * 100}ms`)
+        coin.style.setProperty('--coin-duration', `${2100 + decorativeRandom() * 500}ms`)
+        coin.style.setProperty('--coin-drift', `${decorativeRandom() * 140 - 70}px`)
         coinRain.append(coin)
       }
       document.body.append(coinRain)
@@ -122,7 +131,7 @@ export function LandingExperience() {
         coinRain?.remove()
         coinRain = undefined
         futurePlanButton.removeAttribute('aria-disabled')
-        router.push('/onboarding')
+        router.push('/information')
       }, coinAnimationDuration)
     }
 
@@ -182,7 +191,7 @@ export function LandingExperience() {
       </section>
 
       <section className="perspective" id="our-perspective" aria-labelledby="perspective-title" data-scroll-section>
-        <video className="perspective__video" autoPlay muted loop playsInline preload="auto" aria-hidden="true">
+        <video className="perspective__video" autoPlay muted loop playsInline preload="auto" aria-hidden="true" tabIndex={-1}>
           <source src="/preview_540p_crf22_higher_quality.mp4" type="video/mp4" />
         </video>
         <div className="perspective__backdrop" aria-hidden="true">
@@ -210,7 +219,7 @@ export function LandingExperience() {
           <p className="future-plan__copy" data-reveal style={delayed(100)}>
             Big goals begin with small, steady choices. Take the time to understand what matters to you, then move forward at your own pace.
           </p>
-          <a className="future-plan__button" href="/onboarding" data-reveal style={delayed(200)}>
+          <a className="future-plan__button" href="/information" data-reveal style={delayed(200)}>
             <span>Let’s see the future</span>
             <span className="button-arrow" aria-hidden="true">↗</span>
           </a>

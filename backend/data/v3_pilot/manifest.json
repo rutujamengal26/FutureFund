@@ -1,0 +1,37 @@
+{
+    "version": "3.0",
+    "source_file": "FinMultiverse_100k_refined_training_dataset.csv",
+    "seed": 42,
+    "source_profiles_read": 100,
+    "valid_profiles_processed": 100,
+    "invalid_profiles": 0,
+    "total_scenario_records": 300,
+    "target_definition": "financial_stress_label = 1 if closing_cash_balance_inr < total_monthly_outflow_inr for any month >= 1",
+    "assumption_ranges": {
+        "annual_rent_inflation_pct": [
+            0.0,
+            10.0
+        ],
+        "annual_essential_expense_inflation_pct": [
+            0.0,
+            10.0
+        ],
+        "annual_variable_expense_inflation_pct": [
+            0.0,
+            8.0
+        ],
+        "annual_income_growth_pct": [
+            0.0,
+            15.0
+        ]
+    },
+    "universe_counts": {
+        "act_now": 100,
+        "wait_prepare": 100,
+        "reimagine": 100
+    },
+    "label_distribution": {
+        "0": 258,
+        "1": 42
+    }
+}

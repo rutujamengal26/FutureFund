@@ -1,6 +1,6 @@
 import type { DecisionAnalysis } from '@/services/analysisService'
 
-export type ChatMessage = { role: 'user' | 'assistant'; text: string }
+export type ChatMessage = { role: 'user' | 'assistant'; text: string; graph?: { savings: number; expenses: number } }
 
 export type ChatConversation = {
   id: string
@@ -23,7 +23,7 @@ function parseMessages(value: unknown): ChatMessage[] | null {
     if (!isRecord(item) || (item.role !== 'user' && item.role !== 'assistant') || typeof item.text !== 'string') {
       return null
     }
-    messages.push({ role: item.role, text: item.text })
+    messages.push({ role: item.role, text: item.text, graph: item.graph as any })
   }
   return messages
 }

@@ -1,0 +1,23 @@
+{
+    "features": [
+        "monthly_income_inr",
+        "other_income_inr",
+        "monthly_rent_inr",
+        "essential_expenses_excluding_rent_inr",
+        "variable_expenses_inr",
+        "current_savings_inr",
+        "existing_monthly_emi_inr",
+        "original_proposed_loan_amount_inr",
+        "configured_loan_amount_inr",
+        "annual_interest_rate_pct",
+        "tenure_months",
+        "decision_delay_months",
+        "upfront_cash_outflow_inr",
+        "annual_rent_inflation_pct",
+        "annual_essential_expense_inflation_pct",
+        "annual_variable_expense_inflation_pct",
+        "annual_income_growth_pct",
+        "simulation_horizon_months",
+        "universe_id"
+    ]
+}

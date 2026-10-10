@@ -5,7 +5,9 @@ import { usePathname } from 'next/navigation'
 import { Brain, ChevronDown, GitBranch, MessageCircle, RefreshCw, ShieldCheck, Sparkles, UserRound } from 'lucide-react'
 import { FinancePattern } from '@/components/finance-pattern'
 import { ProfileDialog } from '@/components/profile-dialog'
+import { AuthDialog } from '@/components/auth-dialog'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { isAuthenticated, logout } from '@/lib/authService'
 
 const sections = [
   { href: '/chatbot', label: 'Chatbot', icon: MessageCircle },
@@ -22,6 +24,12 @@ export function FinanceShell({ children }: { children: React.ReactNode }) {
   const profileTriggerRef = useRef<HTMLButtonElement>(null)
   const profileMenuRef = useRef<HTMLDivElement>(null)
   const wasDialogOpen = useRef(false)
+  const [authOpen, setAuthOpen] = useState(false)
+  const [loggedIn, setLoggedIn] = useState(false)
+
+  useEffect(() => {
+    setLoggedIn(isAuthenticated())
+  }, [])
 
   const closeProfileDialog = useCallback(() => setProfileMode(null), [])
   const editProfile = useCallback(() => setProfileMode('edit'), [])
@@ -118,6 +126,23 @@ export function FinanceShell({ children }: { children: React.ReactNode }) {
                 >
                   Edit Profile
                 </button>
+                {!loggedIn ? (
+                  <button
+                    role="menuitem"
+                    onClick={() => { setAuthOpen(true); setProfileOpen(false) }}
+                    className="block w-full rounded-xl px-3 py-2.5 text-left text-sm hover:bg-[#f8f3eb] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#a17a35]"
+                  >
+                    Log in / Sign up
+                  </button>
+                ) : (
+                  <button
+                    role="menuitem"
+                    onClick={() => { logout(); setLoggedIn(false); setProfileOpen(false) }}
+                    className="block w-full rounded-xl px-3 py-2.5 text-left text-sm hover:bg-[#f8f3eb] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#a17a35]"
+                  >
+                    Log out
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -131,6 +156,9 @@ export function FinanceShell({ children }: { children: React.ReactNode }) {
           onClose={closeProfileDialog}
           onEdit={editProfile}
         />
+      )}
+      {authOpen && (
+        <AuthDialog onClose={() => setAuthOpen(false)} onSuccess={() => setLoggedIn(true)} />
       )}
     </main>
   )

@@ -3,7 +3,7 @@
 import { createContext, useContext, useMemo, useState } from 'react'
 import { analyzeDecision, type DecisionAnalysis } from '@/services/analysisService'
 
-type Message = { role: 'user' | 'assistant'; text: string }
+type Message = { role: 'user' | 'assistant'; text: string; graph?: { savings: number; expenses: number } }
 type AnalysisContextValue = { analysis: DecisionAnalysis | null; messages: Message[]; loading: boolean; error: string; submit: (question: string) => Promise<void> }
 const AnalysisContext = createContext<AnalysisContextValue | null>(null)
 
@@ -15,8 +15,11 @@ export function AnalysisProvider({ children }: { children: React.ReactNode }) {
   async function submit(question: string) {
     const trimmed = question.trim()
     if (!trimmed || loading) return
+    let transcript = messages.map(m => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.text}`).join('\n')
+    transcript += (transcript ? '\n' : '') + `User: ${trimmed}`
+    
     setError(''); setMessages((current) => [...current, { role: 'user', text: trimmed }]); setLoading(true)
-    try { const result = await analyzeDecision({ question: trimmed }); setAnalysis(result); setMessages((current) => [...current, { role: 'assistant', text: result.answer }]) }
+    try { const result = await analyzeDecision({ question: trimmed, transcript }); setAnalysis(result); setMessages((current) => [...current, { role: 'assistant', text: result.answer, graph: result.graph }]) }
     catch { setError('We could not process that question. Please try again.') }
     finally { setLoading(false) }
   }

@@ -110,12 +110,12 @@ export function ProfileDialog({ mode, onClose, onEdit }: ProfileDialogProps) {
     setSaved(false)
   }
 
-  function save(event: FormEvent<HTMLFormElement>) {
+  async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const nextErrors = validateProfile(draft)
     setErrors(nextErrors)
     if (Object.keys(nextErrors).length > 0) return
-    if (updateUserProfile(draft)) setSaved(true)
+    if (await updateUserProfile(draft)) setSaved(true)
   }
 
   return (

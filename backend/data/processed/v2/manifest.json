@@ -1,0 +1,16 @@
+{
+    "version": "2.0",
+    "seed": 42,
+    "base_profiles_generated": 5000,
+    "total_scenario_records": 15000,
+    "target_definition": "financial_stress_label = 1 if closing_cash_balance_inr < total_monthly_outflow_inr for any month >= 1",
+    "universe_counts": {
+        "act_now": 5000,
+        "wait_prepare": 5000,
+        "reimagine": 5000
+    },
+    "label_distribution": {
+        "0": 7003,
+        "1": 7997
+    }
+}

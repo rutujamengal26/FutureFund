@@ -1,0 +1,21 @@
+{
+    "model_version": "v1.0",
+    "dataset_source": "data/v3/futurefund_training_v3.csv",
+    "target_definition": "financial_stress_label = 1 if closing cash balance < committed monthly outflow in any simulated month >= 1",
+    "random_seed": 42,
+    "hyperparameters": {
+        "scale_pos_weight": 5.179560368419504,
+        "max_depth": 6,
+        "n_estimators": 100,
+        "learning_rate": 0.1
+    },
+    "train_profiles": 70000,
+    "val_profiles": 15000,
+    "test_profiles": 15000,
+    "train_rows": 210000,
+    "val_rows": 45000,
+    "test_rows": 45000,
+    "train_class_1_ratio": 0.16182380952380954,
+    "val_class_1_ratio": 0.16095555555555555,
+    "test_class_1_ratio": 0.16568888888888889
+}

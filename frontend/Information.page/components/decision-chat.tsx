@@ -12,13 +12,14 @@ import {
   X,
 } from 'lucide-react'
 import { useAnalysis } from '@/components/analysis-context'
+import { BarChart } from '@/components/finance-shell'
 import { formatConversationForSharing, type ChatConversation } from '@/lib/chat-history'
 
 const suggestions = [
-  'Can I afford a ₹5L personal loan?',
-  'What if my expenses increase by 10%?',
-  'Should I wait six months before buying a car?',
-  'How will this decision affect my savings?',
+  'Can I afford a ₹5L personal loan over 3 years?',
+  'I want to buy a car for ₹10L at 8% interest for 5 years.',
+  'Should I take an education loan of ₹20L for 4 years?',
+  'I am planning to buy a house with a ₹50L mortgage for 20 years.',
 ]
 
 function conversationText(conversation: ChatConversation) {
@@ -308,11 +309,17 @@ export function DecisionChat() {
           <p className="mx-auto mt-5 max-w-[510px] text-[15px] leading-7 text-[#6c7771]">Ask a question. Explore the possibilities. Understand the impact before you decide.</p>
           <div className="mt-10 rounded-[24px] border border-[#dcd5c9] bg-white p-3 text-left shadow-[0_12px_36px_rgba(79,61,34,0.07)] focus-within:border-[#bd9b58] focus-within:ring-4 focus-within:ring-[#e9d9b4]/50">
             {messages.length > 0 && (
-              <div className="mb-3 max-h-48 space-y-2 overflow-y-auto px-2 pt-1" aria-live="polite">
+              <div className="mb-3 max-h-[60vh] space-y-2 overflow-y-auto px-2 pt-1" aria-live="polite">
                 {messages.map((message, index) => (
                   <div key={`${message.role}-${index}`} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                     <div className={`max-w-[85%] whitespace-pre-wrap break-words rounded-2xl px-4 py-3 text-[16px] leading-7 ${message.role === 'user' ? 'bg-[#17352f] text-white' : 'bg-[#f7f3ec] text-[#46544e]'}`}>
                       {message.text}
+                      {message.graph && (
+                        <div className="mt-5 rounded-xl bg-white p-4 shadow-sm">
+                          <p className="mb-4 text-sm font-semibold text-[#34443e]">Monthly Projection</p>
+                          <BarChart values={[message.graph.savings, message.graph.expenses]} labels={['Savings', 'Expenses']} />
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}

@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     AI_PROVIDER: str = "gemini" # 'gemini' or 'groq'
     
     GROQ_API_KEY: str = ""
-    GROQ_MODEL: str = "openai/gpt-oss-20b"
+    GROQ_MODEL: str = "qwen/qwen3.8-27b"
     
     DATABASE_URL: str = "postgresql+psycopg://futurefund_user:CHANGE_ME@localhost:5432/futurefund"
     

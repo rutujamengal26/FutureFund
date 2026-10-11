@@ -4,7 +4,7 @@ from typing import Dict, Any, Optional
 from app.schemas.orchestrator import OrchestratorRequest, OrchestratorResponse, MLModelMetadata
 from app.schemas.analysis import ProfileSchema, DecisionSchema
 from app.schemas.ai import DecisionParseResult, ParsedProfile, ParsedDecision
-from app.schemas.auto_pivot import AutoPivotRequest
+from app.schemas.auto_pivot import AutoPivotRequest, UserConstraints
 
 from app.ai.decision_parser import parse_decision_text
 from app.ai.second_opinion import generate_second_opinion
@@ -196,13 +196,16 @@ def analyze_decision(request: OrchestratorRequest, db: Session = None, current_u
             
     # 6. Auto-Pivot
     auto_pivot_resp = None
-    if request.auto_pivot_constraints:
+    if request.auto_pivot_constraints or (final_decision and final_decision.amount_inr > 0):
         try:
+            ap_constraints = request.auto_pivot_constraints or UserConstraints(
+                require_non_negative_monthly_surplus=True
+            )
             ap_req = AutoPivotRequest(
                 profile=final_profile,
                 decision=final_decision,
                 assumptions=request.assumptions,
-                constraints=request.auto_pivot_constraints,
+                constraints=ap_constraints,
                 search_config=request.auto_pivot_config,
                 stress_scenario_id=request.stress_scenario_id
             )
@@ -212,9 +215,70 @@ def analyze_decision(request: OrchestratorRequest, db: Session = None, current_u
             
     # 7. AI Second Opinion
     second_opinion = None
+    
+    multiple_futures_plans = []
+    for u in universes:
+        s = u.summary
+        multiple_futures_plans.append({
+            "plan_name": s.display_name or s.universe_id,
+            "scheduled_monthly_emi_inr": s.scheduled_emi_inr,
+            "ending_projected_cash_reserve_inr": s.ending_projected_cash_balance_inr,
+            "minimum_projected_cash_reserve_inr": s.minimum_projected_cash_balance_inr,
+            "remaining_loan_balance_inr": s.remaining_loan_balance_at_horizon_inr,
+            "total_interest_paid_inr": s.total_interest_full_loan_inr
+        })
+
+
+    auto_pivot_plans = []
+    base_amt = float(final_decision.amount_inr or 500000)
+    base_tenure = int(final_decision.tenure_months or 36)
+    rate = float(final_decision.annual_interest_rate or 10.5) / 100.0 / 12.0
+
+    p_small = base_amt * 0.8
+    emi_small = round((p_small * rate * ((1.0 + rate) ** base_tenure)) / (((1.0 + rate) ** base_tenure) - 1.0)) if rate > 0 else round(p_small / base_tenure)
+    auto_pivot_plans.append({
+        "plan_name": "Smaller Loan",
+        "category": "Auto-Pivot",
+        "description": f"Borrow 20% less (₹{int(p_small):,}) over {base_tenure} months",
+        "loan_amount_inr": p_small,
+        "monthly_emi_inr": emi_small,
+        "total_interest_inr": round((emi_small * base_tenure) - p_small),
+        "primary_benefit": "Lowest overall borrowing and lower monthly EMI"
+    })
+
+    t_long = base_tenure + 12
+    emi_long = round((base_amt * rate * ((1.0 + rate) ** t_long)) / (((1.0 + rate) ** t_long) - 1.0)) if rate > 0 else round(base_amt / t_long)
+    auto_pivot_plans.append({
+        "plan_name": "Longer Tenure",
+        "category": "Auto-Pivot",
+        "description": f"Extend tenure to {t_long} months with principal ₹{int(base_amt):,}",
+        "loan_amount_inr": base_amt,
+        "monthly_emi_inr": emi_long,
+        "total_interest_inr": round((emi_long * t_long) - base_amt),
+        "primary_benefit": "Lowest monthly payment burden to preserve immediate monthly cash flow"
+    })
+
+    emi_wait = round((base_amt * rate * ((1.0 + rate) ** base_tenure)) / (((1.0 + rate) ** base_tenure) - 1.0)) if rate > 0 else round(base_amt / base_tenure)
+    auto_pivot_plans.append({
+        "plan_name": "Wait Before Purchasing",
+        "category": "Auto-Pivot",
+        "description": "Delay loan start by 6 months to save up cash reserves",
+        "loan_amount_inr": base_amt,
+        "monthly_emi_inr": emi_wait,
+        "total_interest_inr": round((emi_wait * base_tenure) - base_amt),
+        "primary_benefit": "Stacks liquid emergency buffer before committing to monthly EMI"
+    })
+
     evidence = {
-        "profile": final_profile.model_dump(),
-        "decision": final_decision.model_dump(),
+        "user_profile": {
+            "monthly_income_inr": final_profile.monthly_income_inr,
+            "monthly_living_expenses_inr": (final_profile.monthly_rent_inr or 0) + (final_profile.essential_expenses_excluding_rent_inr or 0) + (final_profile.variable_expenses_inr or 0),
+            "current_savings_inr": final_profile.current_savings_inr,
+            "existing_monthly_emi_inr": final_profile.existing_monthly_emi_inr
+        },
+        "original_decision": final_decision.model_dump(),
+        "multiple_futures_plans": multiple_futures_plans,
+        "auto_pivot_plans": auto_pivot_plans,
         "assumptions": request.assumptions.model_dump(),
         "universes_summary": [u.summary.model_dump() for u in universes],
         "ml_estimates": {k: v.model_dump() for k, v in ml_estimates.items()}
@@ -224,7 +288,6 @@ def analyze_decision(request: OrchestratorRequest, db: Session = None, current_u
         evidence["stress_tests"] = {k: v.summary.model_dump() for k, v in stress_results.items()}
         
     if auto_pivot_resp:
-        # Avoid sending all candidates, send only recommended and the eligible count
         evidence["auto_pivot_recommended"] = auto_pivot_resp.recommended_candidate_id
         evidence["auto_pivot_eligible_count"] = auto_pivot_resp.eligible_candidates
         
@@ -232,6 +295,7 @@ def analyze_decision(request: OrchestratorRequest, db: Session = None, current_u
         second_opinion = generate_second_opinion(evidence)
     except Exception as e:
         warnings.append(f"Second Opinion failed: {e}")
+
         
     response = OrchestratorResponse(
         status="READY",

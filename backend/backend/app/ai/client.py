@@ -148,8 +148,10 @@ def _generate_with_groq(
                 model=model_name,
                 messages=messages,
                 response_format={"type": "json_object"},
-                temperature=0.0
+                temperature=0.0,
+                max_tokens=850
             )
+
             
             content = response.choices[0].message.content
             if not content:

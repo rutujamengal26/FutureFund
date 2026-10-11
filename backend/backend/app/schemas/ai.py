@@ -29,8 +29,19 @@ class DecisionParseResult(BaseModel):
 class SecondOpinionRequest(BaseModel):
     analysis_evidence: Dict[str, Any]
 
+class PlanEvaluation(BaseModel):
+    plan_name: str = Field(..., description="Name of the plan (e.g. 'Smaller Loan', 'Act Now', 'Wait Before Purchasing')")
+    category: str = Field(..., description="'Multiple Futures' or 'Auto-Pivot'")
+    verdict: str = Field(..., description="AI verdict: 'Top Pick', 'Strong Alternative', or 'High Risk'")
+    key_trade_off: str = Field(..., description="Key upside vs downside of this plan")
+    suitability: str = Field(..., description="When the user should pick this plan")
+
 class SecondOpinionResponse(BaseModel):
     summary: str = Field(..., description="Concise summary of the financial situation.")
+    best_recommended_plan: Optional[str] = Field(None, description="The single best plan chosen by AI across all Multiple Futures and Auto-Pivot plans.")
+    best_plan_category: Optional[str] = Field(None, description="'Multiple Futures' or 'Auto-Pivot'")
+    why_best_plan: Optional[str] = Field(None, description="Detailed explanation of why AI believes this plan is the best choice for the user over all other plans.")
+    all_plans_comparison: List[PlanEvaluation] = Field(default_factory=list, description="Evaluations of all 6 plans across Multiple Futures and Auto-Pivot.")
     key_findings: List[str] = Field(..., description="Key findings supported by the supplied results.")
     universe_comparison: str = Field(..., description="Comparison of the three universes.")
     financial_trade_offs: List[str] = Field(..., description="Relevant financial trade-offs.")
@@ -38,4 +49,6 @@ class SecondOpinionResponse(BaseModel):
     auto_pivot_alternatives: Optional[str] = Field(None, description="Evaluated Auto-Pivot alternatives when available.")
     important_assumptions: List[str] = Field(..., description="Important assumptions and limitations.")
     suggested_next_steps: List[str] = Field(..., description="Suggested next steps for the user.")
+    resilience_strategy: Optional[str] = Field(None, description="Recommended strategy to make user's finances resilient.")
     disclaimer: str = Field(..., description="Educational disclaimer stating this is not guaranteed financial advice and ML predictions are synthetic.")
+

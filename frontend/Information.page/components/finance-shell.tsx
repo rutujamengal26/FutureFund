@@ -166,9 +166,47 @@ export function FinanceShell({ children }: { children: React.ReactNode }) {
 
 export { sections }
 
-export function EmptyAnalysis({ title, detail }: { title: string; detail: string }) {
-  return <div className="mx-auto mt-14 max-w-[560px] rounded-[28px] border border-[#e2d9ca] bg-white/80 p-8 text-center shadow-[0_14px_40px_rgba(79,61,34,0.06)]"><div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f5ead0] text-[#a57627]"><Sparkles size={20} /></div><h2 className="mt-5 text-xl font-semibold text-[#263d39]">{title}</h2><p className="mt-3 text-sm leading-6 text-[#78827d]">{detail}</p><Link href="/chatbot" className="mt-6 inline-flex rounded-xl bg-[#17352f] px-4 py-3 text-sm font-semibold text-[#f5d282] transition hover:bg-[#285248]">Ask Your First Question</Link></div>
+export function EmptyAnalysis({
+  title,
+  detail,
+  samplePrompt,
+  onRunSample,
+  loading
+}: {
+  title: string
+  detail: string
+  samplePrompt?: string
+  onRunSample?: () => void
+  loading?: boolean
+}) {
+  return (
+    <div className="mx-auto mt-14 max-w-[580px] rounded-[28px] border border-[#e2d9ca] bg-white/85 p-8 text-center shadow-[0_14px_40px_rgba(79,61,34,0.06)]">
+      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f5ead0] text-[#a57627]">
+        <Sparkles size={20} />
+      </div>
+      <h2 className="mt-5 text-xl font-semibold text-[#263d39]">{title}</h2>
+      <p className="mt-3 text-sm leading-6 text-[#78827d]">{detail}</p>
+      <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
+        {onRunSample && (
+          <button
+            onClick={onRunSample}
+            disabled={loading}
+            className="w-full sm:w-auto rounded-xl border border-[#c6a254] bg-[#fbf5e6] px-4 py-3 text-sm font-semibold text-[#865d1d] transition hover:bg-[#f6ebd0] disabled:opacity-50"
+          >
+            {loading ? 'Analyzing Scenario...' : (samplePrompt || 'Run Sample ₹5L Loan')}
+          </button>
+        )}
+        <Link
+          href="/decision"
+          className="w-full sm:w-auto inline-flex items-center justify-center rounded-xl bg-[#17352f] px-5 py-3 text-sm font-semibold text-[#f5d282] transition hover:bg-[#285248]"
+        >
+          Ask In Chatbot
+        </Link>
+      </div>
+    </div>
+  )
 }
+
 
 export function MetricCard({ label, value, detail, tone = 'gold' }: { label: string; value: string; detail: string; tone?: 'gold' | 'sage' | 'rose' }) {
   const tones = { gold: 'bg-[#fbf3df] text-[#9b722e]', sage: 'bg-[#e4efe5] text-[#346452]', rose: 'bg-[#f8e7df] text-[#a34b3b]' }

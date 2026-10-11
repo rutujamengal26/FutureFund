@@ -3,7 +3,7 @@ import { fetchAPI } from '../lib/api';
 export interface FinancialProfile { profileId?: string; income?: string; expenses?: string; savings?: string; emi?: string; name?: string }
 export interface DecisionRequest { question: string; profile?: FinancialProfile; conversationId?: string; transcript?: string }
 export interface StressTestResult { incomeDrop: string; emergencyExpense: string; expenseIncrease: string; cashFlowImpact: string; savingsImpact: string; risk: 'Moderate' | 'High'; assumptions: string[] }
-export interface UniverseResult { name: string; monthlyEmi: string; savings: string; netWorth: string; cashFlow: string; debtRemaining: string; tradeoff: string }
+export interface UniverseResult { name: string; monthlyEmi: string; savings: string; netWorth: string; cashFlow: string; debtRemaining: string; tradeoff: string; graph?: { savings: number[]; expenses: number[] } }
 export interface AutoPivotResult { name: string; monthlyEmi: string; totalInterest: string; savings: string; netWorth: string; risk: string }
 export interface AISecondOpinionResult { summary: string; risks: string[]; assumptions: string[]; tradeoffs: string[]; resilience: string }
 export interface DecisionAnalysis { id: string; question: string; summary: string; answer: string; createdAt: string; availableAnalyses: string[]; stressTest: StressTestResult; futures: UniverseResult[]; pivots: AutoPivotResult[]; secondOpinion: AISecondOpinionResult; graph?: { savings: number[]; expenses: number[] } }
@@ -24,7 +24,38 @@ export function mapBackendResponseToDecisionAnalysis(request: DecisionRequest, r
     };
   }
 
-  const futures: UniverseResult[] = (response.universes || []).map((u: any) => {
+  const futures: UniverseResult[] = (response.universes || []).map((u: any, index: number) => {
+    let univGraph: { savings: number[]; expenses: number[] } | undefined;
+    if (u.projection && Array.isArray(u.projection) && u.projection.length > 0) {
+      const sArr = u.projection.map((p: any) => Math.round(p.closing_cash_balance_inr || 0));
+      const eArr = u.projection.map((p: any) => {
+        const living = (p.projected_rent_inr || 0) + (p.projected_essential_expenses_inr || 0) + (p.projected_variable_expenses_inr || 0);
+        return Math.round(living > 0 ? living : (p.total_monthly_outflow_inr || 0));
+      });
+      univGraph = { savings: sArr, expenses: eArr };
+    } else if (request.profile) {
+      const emi = u.summary?.scheduled_emi_inr || 0;
+      const savings = parseFloat(request.profile.savings?.toString() || '0');
+      const income = parseFloat(request.profile.income?.toString() || '0');
+      const expenses = parseFloat(request.profile.expenses?.toString() || '0');
+      
+      const tenureMonths = response.validated_decision?.tenure_months || 36;
+      let currentSavings = savings;
+      let currentExpenses = expenses;
+      const savingsArray = [currentSavings];
+      const expensesArray = [currentExpenses];
+      
+      const delay = u.summary?.decision_start_month ?? (u.summary?.universe_id === 'wait_prepare' ? 6 : (index === 1 ? 6 : 0));
+      for (let m = 1; m <= tenureMonths; m++) {
+        currentExpenses = currentExpenses * Math.pow(1.05, 1 / 12);
+        const monthlyEmiVal = m > delay ? emi : 0;
+        currentSavings += (income - currentExpenses - monthlyEmiVal);
+        savingsArray.push(Math.round(currentSavings));
+        expensesArray.push(Math.round(currentExpenses));
+      }
+      univGraph = { savings: savingsArray, expenses: expensesArray };
+    }
+
     return {
       name: u.summary?.display_name || u.summary?.universe_id || 'Universe',
       monthlyEmi: `₹${u.summary?.scheduled_emi_inr || 0}`,
@@ -32,13 +63,15 @@ export function mapBackendResponseToDecisionAnalysis(request: DecisionRequest, r
       netWorth: `₹${u.summary?.ending_projected_cash_balance_inr || 0}`,
       cashFlow: `₹${u.summary?.monthly_surplus_start_inr || 0}`,
       debtRemaining: `₹${u.summary?.remaining_loan_balance_at_horizon_inr || 0}`,
-      tradeoff: ''
+      tradeoff: '',
+      graph: univGraph
     };
   });
 
   if (futures.length === 0) {
      futures.push({ name: 'Act Now', monthlyEmi: '₹0', savings: '₹0', netWorth: '₹0', cashFlow: '₹0', debtRemaining: '₹0', tradeoff: '' });
      futures.push({ name: 'Wait & Prepare', monthlyEmi: '₹0', savings: '₹0', netWorth: '₹0', cashFlow: '₹0', debtRemaining: '₹0', tradeoff: '' });
+     futures.push({ name: 'Reimagine the Plan', monthlyEmi: '₹0', savings: '₹0', netWorth: '₹0', cashFlow: '₹0', debtRemaining: '₹0', tradeoff: '' });
   }
 
   let secondOpinion: AISecondOpinionResult = { summary: '', risks: [], assumptions: [], tradeoffs: [], resilience: '' };

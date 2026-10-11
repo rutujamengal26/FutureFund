@@ -185,69 +185,141 @@ export function SectionCard({ title, children }: { title: string; children: Reac
 
 export function BarChart({ values, labels }: { values: number[]; labels: string[] }) { return <div className="flex h-44 items-end gap-3 pt-5">{values.map((value, index) => <div key={labels[index]} className="flex flex-1 flex-col items-center gap-2"><div className="w-full rounded-t-xl bg-[#d7b76c] transition-all" style={{ height: `${Math.max(value, 10)}%` }} /><span className="text-[11px] text-[#87908c]">{labels[index]}</span></div>)}</div> }
 
-export function LineChart({ savings, expenses }: { savings: number[] | number; expenses: number[] | number }) {
+export function LineChart({
+  savings,
+  expenses,
+  loanAmount
+}: {
+  savings: number[] | number;
+  expenses: number[] | number;
+  loanAmount?: number | string;
+}) {
   const savingsArr = Array.isArray(savings) ? savings : [savings, savings];
   const expensesArr = Array.isArray(expenses) ? expenses : [expenses, expenses];
-  
-  const rawMax = Math.max(...savingsArr, ...expensesArr, 1);
-  const customTicks = [0, 5000, 10000, 50000, 100000, 200000, 500000, 1000000, 2000000, 5000000, 10000000];
-  const activeTicks = customTicks.filter(t => t <= rawMax);
-  const maxTick = customTicks.find(t => t >= rawMax) || customTicks[customTicks.length - 1];
-  if (!activeTicks.includes(maxTick)) activeTicks.push(maxTick);
-  
-  const numYTicks = activeTicks.length - 1;
+
+  const parseLoan = (l: any) => {
+    if (typeof l === 'number') return l;
+    if (typeof l === 'string') {
+      const cleaned = l.replace(/[^0-9.-]+/g, '');
+      const num = parseFloat(cleaned);
+      return isNaN(num) ? 0 : num;
+    }
+    return 0;
+  };
+  const parsedLoan = parseLoan(loanAmount);
+  const rawMax = Math.max(...savingsArr, ...expensesArr, parsedLoan, 5000);
+
+  const niceSteps = [
+    5000, 10000, 20000, 25000, 50000,
+    100000, 200000, 250000, 500000,
+    1000000, 2000000, 2500000, 5000000, 10000000
+  ];
+
+  let chosenStep = niceSteps[niceSteps.length - 1];
+  for (const step of niceSteps) {
+    const intervals = Math.ceil(rawMax / step);
+    if (intervals >= 3 && intervals <= 7) {
+      chosenStep = step;
+      break;
+    }
+  }
+  if (!chosenStep || Math.ceil(rawMax / chosenStep) > 7) {
+    for (const step of niceSteps) {
+      if (Math.ceil(rawMax / step) <= 7) {
+        chosenStep = step;
+        break;
+      }
+    }
+  }
+
+  const numIntervals = Math.max(1, Math.ceil(rawMax / chosenStep));
+  const maxTick = numIntervals * chosenStep;
+  const activeTicks: number[] = [];
+  for (let i = 0; i <= numIntervals; i++) {
+    activeTicks.push(i * chosenStep);
+  }
+
   const getYPercent = (val: number) => {
     if (val <= 0) return 0;
     if (val >= maxTick) return 100;
-    for (let i = 0; i < numYTicks; i++) {
-      if (val >= activeTicks[i] && val <= activeTicks[i+1]) {
-        const range = activeTicks[i+1] - activeTicks[i];
-        const fraction = (val - activeTicks[i]) / range;
-        return ((i + fraction) / numYTicks) * 100;
-      }
-    }
-    return 100;
+    return (val / maxTick) * 100;
   };
 
   const monthsCount = Math.max(savingsArr.length - 1, 1);
   const numYears = Math.floor(monthsCount / 12);
-  
-  const pts = (arr: number[]) => arr.map((v, i) => `${(i / monthsCount) * 100},${100 - getYPercent(v)}`).join(' ');
-  const formatYLabel = (val: number) => val >= 100000 ? `${(val/100000).toFixed(1).replace('.0', '')}L` : val >= 1000 ? `${(val/1000).toFixed(0)}k` : val;
+
+  const pts = (arr: number[]) =>
+    arr.map((v, i) => `${(i / monthsCount) * 100},${100 - getYPercent(v)}`).join(' ');
+
+  const formatYLabel = (val: number) => {
+    if (val === 0) return '0';
+    if (val >= 10000000) return `${(val / 10000000).toFixed(val % 10000000 === 0 ? 0 : 1)}Cr`;
+    if (val >= 100000) return `${(val / 100000).toFixed(val % 100000 === 0 ? 0 : 1)}L`;
+    if (val >= 1000) return `${(val / 1000).toFixed(0)}k`;
+    return val.toString();
+  };
 
   return (
-    <div className="relative mt-2 h-[350px] sm:h-[450px] w-full pb-14 pl-12 pr-2 pt-4 font-sans text-[11px] text-[#87908c]">
+    <div className="relative mt-2 h-[350px] sm:h-[450px] w-full pb-14 pl-14 pr-4 pt-4 font-sans text-[11px] text-[#87908c]">
       {/* Y Axis Labels */}
-      <div className="absolute bottom-14 left-0 top-4 flex w-10 flex-col-reverse justify-between text-right">
+      <div className="absolute bottom-14 left-0 top-4 w-12">
         {activeTicks.map((tick, i) => (
-          <span key={i} className="relative top-2 pr-1 text-[#6c7771]">{formatYLabel(tick)}</span>
+          <span
+            key={i}
+            className="absolute right-2 -translate-y-1/2 text-right text-[12px] font-medium text-[#6c7771]"
+            style={{ bottom: `${(tick / maxTick) * 100}%` }}
+          >
+            {formatYLabel(tick)}
+          </span>
         ))}
       </div>
-      
+
       {/* Chart Canvas */}
       <div className="relative h-full w-full border-b-[1.5px] border-l-[1.5px] border-[#34443e]">
         {/* Horizontal Grid Lines */}
-        {activeTicks.slice(1).map((_, i) => (
-          <div key={i} className="absolute w-full border-t border-[#e6dfd5]" style={{ bottom: `${((i + 1) / numYTicks) * 100}%` }} />
+        {activeTicks.slice(1).map((tick, i) => (
+          <div
+            key={i}
+            className="absolute w-full border-t border-[#e6dfd5]"
+            style={{ bottom: `${(tick / maxTick) * 100}%` }}
+          />
         ))}
-        
+
         {/* Lines */}
         <svg className="absolute inset-0 h-full w-full overflow-visible" preserveAspectRatio="none" viewBox="0 0 100 100">
-          <polyline fill="none" stroke="#d7b76c" strokeWidth="2" points={pts(savingsArr)} vectorEffect="non-scaling-stroke" />
-          <polyline fill="none" stroke="#a34b3b" strokeWidth="2" points={pts(expensesArr)} vectorEffect="non-scaling-stroke" />
-          
-          <circle cx="0" cy={100 - getYPercent(savingsArr[0])} r="3" fill="#d7b76c" />
-          <circle cx="0" cy={100 - getYPercent(expensesArr[0])} r="3" fill="#a34b3b" />
-          
-          <circle cx="100" cy={100 - getYPercent(savingsArr[savingsArr.length - 1])} r="3" fill="#d7b76c" />
-          <circle cx="100" cy={100 - getYPercent(expensesArr[expensesArr.length - 1])} r="3" fill="#a34b3b" />
+          <polyline fill="none" stroke="#d7b76c" strokeWidth="2.5" points={pts(savingsArr)} vectorEffect="non-scaling-stroke" />
+          <polyline fill="none" stroke="#a34b3b" strokeWidth="2.5" points={pts(expensesArr)} vectorEffect="non-scaling-stroke" />
         </svg>
+
+        {/* Start Data Dots */}
+        <div
+          className="absolute h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-[#d7b76c] shadow-sm pointer-events-none"
+          style={{ left: '0%', bottom: `${getYPercent(savingsArr[0])}%` }}
+        />
+        <div
+          className="absolute h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-[#a34b3b] shadow-sm pointer-events-none"
+          style={{ left: '0%', bottom: `${getYPercent(expensesArr[0])}%` }}
+        />
+
+        {/* End Data Dots */}
+        <div
+          className="absolute h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-[#d7b76c] shadow-sm pointer-events-none"
+          style={{ left: '100%', bottom: `${getYPercent(savingsArr[savingsArr.length - 1])}%` }}
+        />
+        <div
+          className="absolute h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-[#a34b3b] shadow-sm pointer-events-none"
+          style={{ left: '100%', bottom: `${getYPercent(expensesArr[expensesArr.length - 1])}%` }}
+        />
       </div>
 
       {/* X Axis Labels */}
-      <div className="absolute bottom-8 left-12 right-2 h-5">
+      <div className="absolute bottom-8 left-14 right-4 h-5">
         {Array.from({ length: numYears + 1 }).map((_, i) => (
-          <div key={i} className="absolute top-0 flex -translate-x-1/2 flex-col items-center" style={{ left: `${(i / Math.max(1, numYears)) * 100}%` }}>
+          <div
+            key={i}
+            className="absolute top-0 flex -translate-x-1/2 flex-col items-center"
+            style={{ left: `${(i / Math.max(1, numYears)) * 100}%` }}
+          >
             <div className="h-1.5 w-[1.5px] bg-[#34443e]" />
             <span className="mt-1 font-medium text-[#6c7771]">{i === 0 ? '0' : `${i} year`}</span>
           </div>
@@ -256,9 +328,13 @@ export function LineChart({ savings, expenses }: { savings: number[] | number; e
 
       {/* Legend */}
       <div className="absolute bottom-0 left-0 flex w-full justify-center gap-6 text-[12px] font-medium text-[#6c7771]">
-        <span className="flex items-center gap-1.5"><div className="h-2.5 w-2.5 rounded-full bg-[#d7b76c]"></div> Saving</span>
-        <span className="flex items-center gap-1.5"><div className="h-2.5 w-2.5 rounded-full bg-[#a34b3b]"></div> Expenses</span>
+        <span className="flex items-center gap-1.5">
+          <div className="h-2.5 w-2.5 rounded-full bg-[#d7b76c]"></div> Saving
+        </span>
+        <span className="flex items-center gap-1.5">
+          <div className="h-2.5 w-2.5 rounded-full bg-[#a34b3b]"></div> Expenses
+        </span>
       </div>
     </div>
-  )
+  );
 }

@@ -1,4 +1,3 @@
-import os
 import json
 import logging
 import time
@@ -42,10 +41,11 @@ def generate_structured_content(
     """
     if settings.AI_PROVIDER == "groq":
         return _generate_with_groq(prompt, response_model, max_retries, system_instruction)
-    elif settings.AI_PROVIDER == "ollama":
-        return _generate_with_ollama(prompt, response_model, max_retries, system_instruction)
-    else:
+    if settings.AI_PROVIDER == "gemini":
         return _generate_with_gemini(prompt, response_model, max_retries, system_instruction)
+    raise AIConfigurationError(
+        f"Unsupported AI_PROVIDER '{settings.AI_PROVIDER}'. Configure 'gemini' or 'groq'."
+    )
 
 def _generate_with_gemini(
     prompt: str,
@@ -91,82 +91,19 @@ def _generate_with_gemini(
         except ValidationError as e:
             logger.error(f"Pydantic validation failed: {e}")
             raise AIValidationError(f"Invalid structured output: {e}")
+        except httpx.TimeoutException as e:
+            logger.warning(f"Gemini API timeout on attempt {attempt+1}: {e}")
+            last_error = AITimeoutError(f"Timeout connecting to Gemini: {e}")
         except Exception as e:
             logger.warning(f"Gemini API call failed on attempt {attempt+1}: {e}")
             last_error = e
-            attempt += 1
-            if attempt < max_retries:
-                time.sleep(2 ** attempt)
-                
-    raise AIAPIError(f"Failed to generate content after {max_retries} attempts. Last error: {last_error}")
-
-def _generate_with_ollama(
-    prompt: str,
-    response_model: Type[T],
-    max_retries: int,
-    system_instruction: Optional[str]
-) -> T:
-    base_url = settings.OLLAMA_BASE_URL.rstrip('/')
-    url = f"{base_url}/api/chat"
-    
-    # Using 'json' instead of strict schema to avoid Qwen3 infinite generation hangs
-    
-    messages = []
-    if system_instruction:
-        messages.append({"role": "system", "content": system_instruction})
-    messages.append({"role": "user", "content": prompt})
-    
-    payload = {
-        "model": settings.OLLAMA_MODEL,
-        "messages": messages,
-        "format": "json",
-        "stream": False,
-        "options": {
-            "temperature": 0.0
-        }
-    }
-    
-    attempt = 0
-    last_error = None
-    
-    while attempt < max_retries:
-        try:
-            with httpx.Client(timeout=120.0) as client:
-                response = client.post(url, json=payload)
-                
-            if response.status_code != 200:
-                raise AIAPIError(f"Ollama API returned {response.status_code}: {response.text}")
-                
-            data = response.json()
-            if "message" not in data or "content" not in data["message"]:
-                raise AIAPIError("Unexpected response structure from Ollama.")
-                
-            content = data["message"]["content"]
-            if not content:
-                raise AIAPIError("Received empty response content from Ollama.")
-                
-            return response_model.model_validate_json(content)
-            
-        except ValidationError as e:
-            logger.error(f"Pydantic validation failed for Ollama output: {e}")
-            raise AIValidationError(f"Invalid structured output from Ollama: {e}")
-        except httpx.TimeoutException as e:
-            logger.warning(f"Ollama API timeout on attempt {attempt+1}: {e}")
-            last_error = AITimeoutError(f"Timeout connecting to Ollama: {e}")
-        except httpx.RequestError as e:
-            logger.warning(f"Ollama connection error on attempt {attempt+1}: {e}")
-            last_error = AIAPIError(f"Failed to connect to Ollama service at {base_url}. Error: {e}")
-        except Exception as e:
-            logger.warning(f"Ollama API call failed on attempt {attempt+1}: {e}")
-            last_error = e
-            
         attempt += 1
         if attempt < max_retries:
             time.sleep(2 ** attempt)
-            
-    if last_error:
+
+    if isinstance(last_error, AITimeoutError):
         raise last_error
-    raise AIAPIError(f"Failed to generate content with Ollama after {max_retries} attempts.")
+    raise AIAPIError(f"Failed to generate content after {max_retries} attempts. Last error: {last_error}")
 
 def get_groq_client() -> Any:
     try:
@@ -250,4 +187,3 @@ def _generate_with_groq(
     if last_error:
         raise last_error
     raise AIAPIError(f"Failed to generate content with Groq after {max_retries} attempts.")
-

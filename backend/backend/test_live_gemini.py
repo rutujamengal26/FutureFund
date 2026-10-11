@@ -1,15 +1,15 @@
+"""Live integration smoke test for the Gemini provider."""
+
 import asyncio
-import os
 from app.ai.decision_parser import parse_decision_text
 from app.ai.second_opinion import generate_second_opinion
 from app.schemas.analysis import DecisionSchema, ProfileSchema
 from app.core.config import settings
 
 async def run_live_tests():
-    # Make sure we use the local ollama
-    os.environ["AI_PROVIDER"] = "ollama"
+    settings.AI_PROVIDER = "gemini"
     
-    print("Testing live Ollama...")
+    print("Testing live Gemini...")
     
     print("\n--- Testing parse_decision_text ---")
     try:
@@ -40,14 +40,12 @@ async def run_live_tests():
             tenure_months=24,
             upfront_cash_outflow_inr=0
         )
-        opinion = await asyncio.to_thread(
-            generate_second_opinion,
-            "I want to buy a car for 500k over 2 years at 9% interest.",
-            profile,
-            decision,
-            {},
-            []
-        )
+        opinion = await asyncio.to_thread(generate_second_opinion, {
+            "profile": profile.model_dump(),
+            "decision": decision.model_dump(),
+            "simulations": {},
+            "assumptions": [],
+        })
         print(f"SUCCESS: {opinion}")
     except Exception as e:
         print(f"FAILURE generate_second_opinion: {e}")

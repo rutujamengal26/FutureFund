@@ -6,7 +6,7 @@ FutureFund is an AI-powered financial decision simulator. The backend is built u
 ## Core Modules
 - **app/api**: Contains all API route definitions and controllers.
 - **app/schemas**: Pydantic models for request validation and response serialization.
-- **app/ai**: Integration with local Ollama (or Gemini) for natural-language decision understanding and second opinions.
+- **app/ai**: Integration with Gemini or Groq for natural-language decision understanding and second opinions.
 - **app/ml**: XGBoost-based financial-stress estimation models.
 - **app/financial**: Core financial calculation logic (e.g., fixed-rate loan calculations, inflation adjustments).
 - **app/simulation**: Logic for generating the three financial universes (Act Now, Wait & Prepare, Reimagine the Plan) and stress testing.
@@ -15,7 +15,7 @@ FutureFund is an AI-powered financial decision simulator. The backend is built u
 
 ## Principles
 1. **Authoritative Financials**: Financial formulas and simulation results are authoritative and calculated strictly in Python.
-2. **AI Guardrails**: The configured AI (Ollama/Gemini) is used for explanation and understanding, not for generating financial calculations.
+2. **AI Guardrails**: The configured AI (Gemini/Groq) is used for explanation and understanding, not for generating financial calculations.
 3. **Data Integrity**: Monetary values are explicitly named (e.g., `_inr`) and rent is never double-counted with other essential expenses.
 4. **Security**: Secrets and API keys are managed via environment variables and never exposed to the frontend.
 
@@ -34,8 +34,8 @@ The Auto-Pivot Engine allows users to algorithmically explore alternative financ
 - **ML & Trade-offs**: Emits transparent, human-readable trade-offs for each candidate. The engine remains purely deterministic and does not rely on XGBoost or LLMs for candidate formulation.
 
 ## AI Integration (Phase 7 & 10)
-The system leverages local Ollama, Google's official Python Gen AI SDK (`google-genai`), or the Groq Python SDK (`groq`) to provide natural-language decision understanding and evidence-based Second Opinions.
-- **Provider Routing**: Selected dynamically via `AI_PROVIDER` (e.g., `gemini`, `ollama`, or `groq`) ensuring identical Pydantic output contracts.
+The system leverages Google's official Python Gen AI SDK (`google-genai`) or the Groq Python SDK (`groq`) to provide natural-language decision understanding and evidence-based Second Opinions.
+- **Provider Routing**: Selected dynamically via `AI_PROVIDER` (`gemini` or `groq`), ensuring identical Pydantic output contracts.
 - **Decision Parser**: Extracts structured financial intents and parameters from unstructured user text using strict JSON schemas. It safely forces clarifications for ambiguous inputs rather than hallucinating defaults.
 - **Second Opinion**: Reads verified calculation evidence (simulations, stress tests, Auto-Pivot alternatives) to generate a grounded, conversational summary of the user's financial posture. It strictly abides by instructions to *explain* deterministic results rather than *calculate* new ones.
 - **Error Handling**: Uses bounded retries for transient networking/API errors. Pydantic is used to strictly enforce API contracts for all ML and LLM responses.
